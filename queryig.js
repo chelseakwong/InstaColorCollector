@@ -16,33 +16,22 @@ var https = require('https');
 var fs = require('fs');
 var mkdirp = require('mkdirp');
 var bn = require('bignumber.js');
+var urlencode = require('urlencode');
 var utf8 = require('utf8');
 var exports = module.exports = {};
+var masterPath = '/Volumes/CHELSEANIKE/igcolorsplaces/';
 
 /*
 
     MODIFY FOR EACH DIFFERENT LOCATION
 
 */
-var searchTerm = '911neverforget'; // what are you searching for?
-var lat = 40.7129;
-var long = -74.0132;
-var placeName = "WTC";
+// what are you searching for?
 
-
-var queryMaxLength = 2;
-
-var mt; // max tag for recursion
-
-// OAUTH
-
-// grabber8788:
-ig.use({client_id: '1867c1408b824ad28f3659ca735fca19',
-        client_secret: 'aac2ea75aa304d55ab214d5c142ba3fe'
-    });
-
-// ig.set('client_id', '1867c1408b824ad28f3659ca735fca19');
-// ig.set('client_secret', 'aac2ea75aa304d55ab214d5c142ba3fe');
+var searchTerm = 'hiroshima';
+var lat = 34.3955;
+var long = 132.4537;
+var placeName = "hiroshimabombdome";
 
 
 // Date(year, month, day, hours, minutes, seconds, milliseconds);
@@ -51,10 +40,14 @@ ig.use({client_id: '1867c1408b824ad28f3659ca735fca19',
 // months are 0 based (0-11), days are NOT (1-31), hours are 24-hour
 
 // this is the earliest image you want to download:
-var startDate = Math.floor(new Date(2015, 8, 11, 0, 0, 0, 0).getTime()/1000.);
+var startDate = Math.floor(new Date(2015, 7, 6, 0, 0, 0, 0).getTime()/1000.);
 // this is the latest image you want to download:
-var endDate = Math.floor(new Date(2015, 8, 11, 23, 59, 0, 0).getTime()/1000.);
+var endDate = Math.floor(new Date(2015, 7, 6, 23, 59, 0, 0).getTime()/1000.);
 // (the downloading will happen backwards - endDate to startDate)
+
+
+/* END MODIFICATION */
+var mt; // max tag for recursion
 
 var absminID, absmaxID; // lowest and highest ID to search for
 
@@ -63,6 +56,7 @@ var metadata = {};
 var filters = {};
 
 var countDownloaded = 0;
+var queryMaxLength = 10000;
 
 metadata.images = new Array();
 filters.allNames = new Array();
@@ -107,13 +101,10 @@ function getMinID()
   ig.media_search(lat, long, {
     min_timestamp: startDate-(60*60*24),
     max_timestamp: startDate,
-    // mall in bangkok
-    // lat: 13.7464,
-    // lng: 100.5350,
-    distance: 500},
+    distance: 1000},
     function(err, medias, remaining, limit){
       console.log("get min ID complete");
-      console.log(err);
+      console.log("err: "+err);
       console.log("medias = "+medias);
       obj = medias[0];
       for (obj in medias){
@@ -140,7 +131,7 @@ function getMaxID()
   ig.media_search(lat, long, {
     min_timestamp: endDate-(60*60*24),
     max_timestamp: endDate,
-    distance: 500},
+    distance: 1000},
     function(err, medias, remaining, limit){
       absmaxID = new bn(medias[0].id.split('_')[0]); // use short form IDs
       printID();
@@ -159,14 +150,14 @@ function printID()
   console.log("start ID: " + absminID);
   console.log("end ID: " + absmaxID);
 
-  mkdirp('./'+placeName, function(err) {
+  mkdirp(masterPath+placeName, function(err) {
     // path was created unless there was error
   });
-  mkdirp('./'+placeName+'_meta', function(err) {
+  mkdirp(masterPath+placeName+'_meta', function(err) {
     // path was created unless there was error
   });
 
-  mkdirp("./"+placeName+'_filters', function(err){
+  mkdirp(masterPath+placeName+'_filters', function(err){
       //path was created unless there was error
   });
 
@@ -186,13 +177,25 @@ function printID()
 // then the app will exit.
 function getIG()
 {
-  ig.tag_media_recent(utf8.encode(searchTerm),{
+  ig.tag_media_recent((urlencode(searchTerm)),{
     // name: utf8.encode(searchTerm), // term to search
     // count: 100, // 100 images per page
     max_tag_id: mt.toString()}, // starting ID (based on the bangkok mall)
     function(err, medias, pagination, remaining, limit){
+        // console.log(urlencode(searchTerm));
+        if (err){
+            console.log("err code: "+err.code);
+            console.log("err type: "+err.error_type);
+            console.log("err message: "+err.error_message);
+            console.log("err status code: "+err.status_code);
+            // console.log("err body: "+err.body);
+        }
+
+        // console.log("medias = "+medias);
+        console.log("--------------------");
         console.log("downloaded : "+countDownloaded);
         console.log("remaining : "+remaining);
+
     //   console.log("highest ID should be: " + mt);
     //   console.log("first ID on page: " + medias[0].id);
       // debug: find out the date of this page:
@@ -219,8 +222,9 @@ function getIG()
         // console.log("min id:      " + absminID);
         // console.log("diff:        " + mt.minus(absminID));
         var next_id = new bn(pagination.next_max_tag_id);
-      if((countDownloaded >= queryMaxLength) ||mt.equals(next_id)
-            || !pagination.next_max_tag_id || mt.lessThan(absminID)) {
+    //   if((countDownloaded > queryMaxLength) ||mt.equals(next_id)
+    //         || !pagination.next_max_tag_id || mt.lessThan(absminID)) {
+        if (countDownloaded > queryMaxLength){
         console.log("reached end of query");
         writeMeta(mt); // one last time
         exportAllFilters();//export all filter info
@@ -228,10 +232,10 @@ function getIG()
         // will pause to clean up
       }
       else {
-        console.log("saving this page's results");
+        // console.log("saving this page's results");
         writeMeta(mt); // save every page
         mt = new bn(pagination.next_max_tag_id);
-        console.log("continuing to next page....");
+        // console.log("continuing to next page....");
         getIG();
       }
     }
@@ -245,7 +249,7 @@ function downloadImage(_url, _fn)
         // console.log("downlad url "+_url);
         var request = https.get(_url, function(response) {
           if (response.statusCode === 200) {
-            var file = fs.createWriteStream("./"+placeName+"/"+_fn);
+            var file = fs.createWriteStream(masterPath+placeName+"/"+_fn);
             response.pipe(file);
           }
           // Add timeout.
@@ -260,7 +264,7 @@ function writeMeta(_mt)
   // write file:
   var thestuff = JSON.stringify(metadata, null, '\t');
   // write to the output file in the 'subs' folder:
-  var outfile = "./"+placeName+'_meta/'+mt+'_meta.json';
+  var outfile = masterPath+placeName+'_meta/'+mt+'_meta.json';
   fs.writeFile(outfile, thestuff, function (err) {
     //   error handling
     if (err){
@@ -274,7 +278,7 @@ function writeMeta(_mt)
 function exportAllFilters(){
     var fl = JSON.stringify(filters, null, '\t');
     // console.log(filtersLog);
-    var exportFile = "./"+placeName+'_filters/'+'filters.json';
+    var exportFile = masterPath+placeName+'_filters/'+'filters.json';
     // console.log("writing to... "+exportFile);
     fs.writeFile(exportFile, fl, function(err){
         if (err){
@@ -282,5 +286,5 @@ function exportAllFilters(){
         }
     });
     console.log("exported filters!");
-    process.exit();
+    // process.exit();
 }
