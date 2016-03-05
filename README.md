@@ -1,10 +1,6 @@
-# instadownload
-node.js-based instagram batch image + metadata downloader 
+# InstaColorCollector
+node.js-based instagram batch image + metadata downloader + color collector + top n colors sorter
 
 usage:
 
-pretty easy.  just modify the 'searchTerm', 'startDate', and 'endDate' variables.  remember the dates are in js Date format, so they're a little wonky as to what's 0-based and what's 1-based.  then run it in node:
-
-    node instadownload.js
-
-and you should be off and running.
+run node on fetcher.js and grabColors.js to 1) scrape images from instagram according to location, hashtag, and date parameters, and 2) collect the top n colors from the resulting images
