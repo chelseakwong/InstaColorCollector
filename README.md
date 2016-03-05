@@ -1,4 +1,4 @@
-# Colors of Tragedies
+# InstaColorCollector
 node.js-based instagram batch image + metadata downloader + color collector + top n colors sorter
 
 usage:
