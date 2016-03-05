@@ -1,3 +1,8 @@
 *.json
 *.jpg
 node_modules/
+WTC/
+WTC_filters/
+WTC_meta/
+guitar/
+guitar_meta/

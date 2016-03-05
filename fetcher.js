@@ -1,3 +1,7 @@
+// Run this server to fetch images from Instagram
+// call by "node fetcher.js", open up localhost:3000/authorize_user
+// should then begin downloading images
+// Chelsea Kwong
 var express = require('express');
 var api = require('instagram-node').instagram();
 var https = require('https');
@@ -12,10 +16,11 @@ var queryig = require("./queryig.js");
 // });
 
 api.use({
-  client_id: '1867c1408b824ad28f3659ca735fca19',
-  client_secret: 'aac2ea75aa304d55ab214d5c142ba3fe'
+  client_id: 'yourid',
+  client_secret: 'yoursecret'
 });
 
+// redirect to actually parse responses and fetch images
 var redirect_uri = 'http://localhost:3000/handleauth';
 
 exports.authorize_user = function(req, res) {
