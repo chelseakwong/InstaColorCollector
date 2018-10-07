@@ -20,10 +20,10 @@ MODIFY FOR EACH DIFFERENT LOCATION
 */
 
 // what are you searching for?
-var searchTerm = "bentorodrigues";
-var lat = -20.2065;
-var long =  -43.46711;
-var placeName = "BentoRodrigues";
+var searchTerm = "lol";
+var lat = 34.0522;
+var long =  118.2437;
+var placeName = "testLol";
 
 
 
@@ -59,7 +59,7 @@ console.log("end date: " + endDate);
 
 exports.startProcess = function(at){
     // at should be string
-    ig.use({ access_token: '199926498.fc50c91.812dcf2241614c309297ae1b47a4a7fc' });
+    ig.use({ access_token: at });
     getMinID(); // START IT GOING
 }
 
@@ -92,7 +92,7 @@ function getMinID()
     ig.media_search(lat, long, {
         min_timestamp: startDate-(60*60*24),
         max_timestamp: startDate,
-        distance: 5000},
+        distance: 50},
         function(err, medias, remaining, limit){
             console.log("get min ID complete");
             console.log("err: "+err);
